@@ -15,9 +15,6 @@ Clear Input: A "Clear" button is provided to reset the input field and result.
 
 Usage
 
-To use the Country to ISO Code Converter, simply open the index.html file in your web browser. You will see a user-friendly interface with an input field and a "Convert" button.
-
-
 Enter a country name or an ISO code in the input field.
 Click the "Convert" button.
 The result will be displayed below the input field.
