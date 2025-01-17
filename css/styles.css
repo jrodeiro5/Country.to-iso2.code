@@ -28,6 +28,45 @@ body.dark-mode {
     padding: 20px;
     border: 1px solid var(--pull-bear-black);
     transition: background-color 0.3s, border-color 0.3s;
+    margin-top: 50px;
+}
+
+.language-select {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 5px 10px;
+    font-size: 14px;
+    border: 1px solid var(--pull-bear-black);
+    background-color: var(--pull-bear-white);
+    color: var(--pull-bear-black);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.language-select:hover {
+    background-color: var(--pull-bear-gray);
+}
+
+.language-select:focus {
+    border-color: var(--pull-bear-black);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+[dir="rtl"] body {
+    direction: rtl;
+}
+
+[dir="rtl"] .language-select {
+    left: auto;
+    right: 10px;
+}
+
+[dir="rtl"] .mode-toggle {
+    right: auto;
+    left: 10px;
 }
 
 h1 {
@@ -55,11 +94,14 @@ input {
     margin-bottom: 10px;
     background-color: var(--pull-bear-white);
     color: var(--pull-bear-black);
+    border-radius: 4px;
 }
 
 input:focus {
     outline: none;
     background-color: var(--pull-bear-gray);
+    border-color: var(--pull-bear-black);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
 button {
@@ -73,6 +115,7 @@ button {
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 1px;
+    border-radius: 4px;
 }
 
 button:hover {
@@ -87,6 +130,7 @@ button:hover {
     background-color: var(--pull-bear-gray);
     border-left: 4px solid var(--pull-bear-black);
     transition: background-color 0.3s, border-color 0.3s;
+    border-radius: 4px;
 }
 
 .suggestions {
@@ -97,6 +141,8 @@ button:hover {
     width: 100%;
     z-index: 10;
     transition: background-color 0.3s, border-color 0.3s;
+    border-radius: 4px;
+    margin-top: -5px;
 }
 
 .suggestion-item {
@@ -113,10 +159,11 @@ button:hover {
     display: flex;
     justify-content: center;
     margin-bottom: 15px;
+    gap: 8px;
 }
 
 .switch-container button {
-    margin: 0 4px;
+    margin: 0;
     padding: 6px 10px;
     font-size: 14px;
     background-color: var(--pull-bear-white);
@@ -139,6 +186,7 @@ button:hover {
     font-size: 24px;
     cursor: pointer;
     transition: transform 0.3s ease;
+    padding: 5px;
 }
 
 .mode-toggle:hover {
@@ -169,6 +217,12 @@ button:hover {
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}
+
 @media (max-width: 430px) {
     body {
         padding: 10px;
@@ -180,5 +234,31 @@ button:hover {
     
     h1 {
         font-size: 1.5em;
+    }
+
+    .language-select {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+
+    .switch-container button {
+        font-size: 12px;
+        padding: 5px 8px;
+    }
+}
+
+@media (max-width: 320px) {
+    h1 {
+        font-size: 1.2em;
+    }
+
+    .container {
+        padding: 10px;
+        margin-top: 40px;
+    }
+
+    input, button {
+        font-size: 12px;
+        padding: 6px 10px;
     }
 }
