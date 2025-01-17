@@ -12,32 +12,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Country Code Converter</title>
-    
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Convert country names to ISO codes and vice versa with support for multiple languages">
-    <meta name="keywords" content="country codes, ISO codes, country converter, international">
-    
-    <!-- Open Graph Meta Tags -->
-    <meta property="og:title" content="Country Code Converter">
-    <meta property="og:description" content="Convert country names to ISO codes and vice versa">
-    <meta property="og:type" content="website">
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="Country Code Converter">
-    <meta name="twitter:description" content="Convert country names to ISO codes and vice versa">
-    
-    <!-- Fonts -->
+    <!-- Google Fonts: Roboto and Noto Emoji -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Noto+Emoji&display=swap" rel="stylesheet">
-    
-    <!-- Preconnect -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    
-    <!-- Analytics -->
+    <link rel="stylesheet" href="css/styles.css">
     <script defer src="https://cdn.overtracking.com/t/thyN9X0Fz3bgRfrSJ/"></script>
 </head>
 <body>
@@ -45,8 +22,33 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WZ3F3B7C"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+     
+    <button class="mode-toggle" onclick="toggleDarkMode()">🌓</button>
+    <div class="container">
+        <h1>Country Code Converter</h1>
+        <div class="switch-container">
+            <button id="countryToCodeBtn" class="active" onclick="switchMode('countryToCode')">Country to Code</button>
+            <button id="codeToCountryBtn" onclick="switchMode('codeToCountry')">Code to Country</button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="input" placeholder="Enter country name">
+            <button onclick="convert()">Convert</button>
+        </div>
+        <div id="suggestions" class="suggestions" style="display: none;"></div>
+        <div id="result"></div>
+        <button onclick="copyToClipboard()" style="display: none; margin-top: 10px;">Copy to Clipboard</button>
+        <div class="flag-container">
+            <span id="flag" class="flag"></span>
+            <div id="typicalElement" class="typical-element"></div>
+        </div>
+    </div>
     
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <!-- Load data first -->
+    <script src="js/data/countries.js"></script>
+    <script src="js/data/flags.js"></script>
+    
+    <!-- Then load application logic -->
+    <script src="js/converter.js"></script>
+    <script src="js/ui.js"></script>
 </body>
 </html>
