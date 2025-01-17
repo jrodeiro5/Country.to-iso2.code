@@ -1,22 +1,43 @@
-Country.to-iso2.code
+# Country Code Converter
 
-About
+A simple web application that converts between country names and their corresponding ISO codes with "PULL_" prefix.
 
-The Country to ISO Code Converter is a lightweight HTML, CSS, and JavaScript application. It was designed to be a quick and easy tool for developers and anyone who needs to work with country codes. The converter supports a wide range of countries and their respective ISO codes.
+## Features
 
+- Convert country names to ISO codes (e.g., "Spain" → "PULL_ES")
+- Convert ISO codes to country names (e.g., "PULL_ES" → "Spain")
+- Dark/light mode toggle
+- Autocomplete suggestions
+- Copy to clipboard functionality
+- Flag emoji display
+- Responsive design
 
-Features
+## Project Structure
 
-Country Name to ISO Code: Enter a country name, and the converter will display the corresponding ISO 2-letter code.
-ISO Code to Country Name: Enter an ISO code, and the converter will show the associated country name.
-Case Insensitivity: The converter is case-insensitive, so you can enter country names or ISO codes in any case.
-Prefix for ISO Codes: All ISO 2-letter codes are preceded with the "PULL_" prefix.
-Clear Input: A "Clear" button is provided to reset the input field and result.
+```
+country-code-converter/
+├── index.html          # Main HTML file
+├── css/
+│   └── styles.css     # Styling
+├── js/
+│   ├── converter.js    # Core conversion logic
+│   ├── ui.js          # UI interactions
+│   └── data/
+│       ├── countries.js  # Country codes data
+│       └── flags.js      # Flag emoji data
+└── README.md
+```
 
-Usage
+## Usage
 
-Enter a country name or an ISO code in the input field.
-Click the "Convert" button.
-The result will be displayed below the input field.
-If the entered country or ISO code is not found, a message will be shown indicating that the code or country is not recognized.
-To start a new conversion, click the "Clear" button to reset the input field and result.
+Just open `index.html` in a web browser to use the converter.
+
+## Development
+
+To modify or extend the converter:
+
+1. Edit country codes in `js/data/countries.js`
+2. Edit flag emojis in `js/data/flags.js`
+3. Modify conversion logic in `js/converter.js`
+4. Update UI interactions in `js/ui.js`
+5. Style changes can be made in `css/styles.css`
