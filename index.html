@@ -1,54 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-WZ3F3B7C');</script>
-    <!-- End Google Tag Manager -->
+    <!-- Previous head content remains the same -->
+    <!-- The countryCodes object -->
+    <script>
+        const countryCodes = {
+            "spain": "PULL_ES",
+            "france": "PULL_FR",
+            "germany": "PULL_DE",
+            "italy": "PULL_IT",
+            "united kingdom": "PULL_GB",
+            // ... (all country codes)
+        };
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Country Code Converter</title>
-    <!-- Google Fonts: Roboto and Noto Emoji -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Noto+Emoji&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
-    <script defer src="https://cdn.overtracking.com/t/thyN9X0Fz3bgRfrSJ/"></script>
-</head>
-<body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WZ3F3B7C"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-     
-    <button class="mode-toggle" onclick="toggleDarkMode()">🌓</button>
-    <div class="container">
-        <h1>Country Code Converter</h1>
-        <div class="switch-container">
-            <button id="countryToCodeBtn" class="active" onclick="switchMode('countryToCode')">Country to Code</button>
-            <button id="codeToCountryBtn" onclick="switchMode('codeToCountry')">Code to Country</button>
-        </div>
-        <div class="input-group">
-            <input type="text" id="input" placeholder="Enter country name">
-            <button onclick="convert()">Convert</button>
-        </div>
-        <div id="suggestions" class="suggestions" style="display: none;"></div>
-        <div id="result"></div>
-        <button onclick="copyToClipboard()" style="display: none; margin-top: 10px;">Copy to Clipboard</button>
-        <div class="flag-container">
-            <span id="flag" class="flag"></span>
-            <div id="typicalElement" class="typical-element"></div>
-        </div>
-    </div>
-    
-    <!-- Load data first -->
-    <script src="js/data/countries.js"></script>
-    <script src="js/data/flags.js"></script>
-    
-    <!-- Then load application logic -->
-    <script src="js/converter.js"></script>
-    <script src="js/ui.js"></script>
+        const typicalElements = {
+            "spain": "🇪🇸",
+            "france": "🇫🇷",
+            "germany": "🇩🇪",
+            "italy": "🇮🇹",
+            "united kingdom": "🇬🇧",
+            // ... (all flag emojis)
+        };
+
+        // Create a case-insensitive version of the countryCodes object
+        const caseInsensitiveCountryCodes = Object.fromEntries(
+            Object.entries(countryCodes).map(([country, code]) => [country.toLowerCase(), code])
+        );
+
+        // Create a reverse mapping for code to country (case-insensitive)
+        const caseInsensitiveCodeToCountry = Object.fromEntries(
+            Object.entries(countryCodes).map(([country, code]) => [code.toLowerCase(), country])
+        );
+
+        let mode = 'countryToCode';
+        const input = document.getElementById('input');
+        const result = document.getElementById('result');
+        const suggestionsDiv = document.getElementById('suggestions');
+        const copyButton = document.querySelector('button[onclick="copyToClipboard()"]');
+        const flagImg = document.getElementById('flag');
+        const typicalElementDiv = document.getElementById('typicalElement');
+
+        function switchMode(newMode) {
+            mode = newMode;
+            document.getElementById('countryToCodeBtn').classList.toggle('active', mode === 'countryToCode');
+            document.getElementById('codeToCountryBtn').classList.toggle('active', mode === 'codeToCountry');
+            input.value = '';
+            result.textContent = '';
+            copyButton.style.display = 'none';
+            input.placeholder = mode === 'countryToCode' ? 'Enter country name' : 'Enter ISO code';
+            hideFlag();
+        }
+
+        function convert() {
+            const inputValue = input.value.toLowerCase();
+            if (mode === 'countryToCode') {
+                if (caseInsensitiveCountryCodes.hasOwnProperty(inputValue)) {
+                    const code = caseInsensitiveCountryCodes[inputValue];
+                    result.textContent = code.startsWith('PULL_') ? code : `PULL_${code}`;
+                    copyButton.style.display = 'block';
+                    showFlag(inputValue);
+                } else {
+                    result.textContent = "Country not found";
+                    copyButton.style.display = 'none';
+                    hideFlag();
+                }
+            } else {
+                if (caseInsensitiveCodeToCountry.hasOwnProperty(inputValue)) {
+                    const countryName = caseInsensitiveCodeToCountry[inputValue];
+                    result.textContent = countryName.charAt(0).toUpperCase() + countryName.slice(1);
+                    copyButton.style.display = 'block';
+                    showFlag(countryName.toLowerCase());
+                } else {
+                    result.textContent = "Code not found";
+                    copyButton.style.display = 'none';
+                    hideFlag();
+                }
+            }
+        }
+
+        function showFlag(country) {
+            if (typicalElements[country]) {
+                typicalElementDiv.textContent = typicalElements[country];
+                typicalElementDiv.style.opacity = '1';
+                typicalElementDiv.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            } else {
+                typicalElementDiv.style.opacity = '0';
+            }
+        }
+
+        function hideFlag() {
+            typicalElementDiv.style.opacity = '0';
+            typicalElementDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(result.textContent).then(() => {
+                alert('Copied to clipboard!');
+            });
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        input.addEventListener('input', function() {
+            const inputValue = this.value.toLowerCase();
+            let suggestions = [];
+            if (mode === 'countryToCode') {
+                suggestions = Object.keys(caseInsensitiveCountryCodes).filter(country => country.startsWith(inputValue));
+            } else {
+                suggestions = Object.keys(caseInsensitiveCodeToCountry).filter(code => code.startsWith(inputValue));
+            }
+            showSuggestions(suggestions);
+        });
+
+        function showSuggestions(suggestions) {
+            if (suggestions.length > 0 && input.value) {
+                suggestionsDiv.innerHTML = suggestions.map(s => {
+                    const displayText = s.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    return `<div class="suggestion-item">${displayText}</div>`;
+                }).join('');
+                suggestionsDiv.style.display = 'block';
+                suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        input.value = this.textContent;
+                        suggestionsDiv.style.display = 'none';
+                        convert();
+                    });
+                });
+            } else {
+                suggestionsDiv.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target !== input && e.target !== suggestionsDiv) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
