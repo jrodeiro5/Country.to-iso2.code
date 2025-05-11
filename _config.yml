@@ -1,0 +1,6 @@
+theme: jekyll-theme-minimal
+title: Country Code Converter
+description: Convert country names to ISO codes with PULL_ prefix
+baseurl: /Country.to-iso2.code
+url: https://jrodeiro5.github.io
+author: jrodeiro5
