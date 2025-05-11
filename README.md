@@ -49,6 +49,10 @@ git clone https://github.com/jrodeiro5/Country.to-iso2.code.git
 
 3. Push changes to GitHub to update the GitHub Pages site
 
+## GitHub Pages
+
+This project is deployed on GitHub Pages for easy access and usage.
+
 ## License
 
 This project is under the MIT License - see the LICENSE file for details.
