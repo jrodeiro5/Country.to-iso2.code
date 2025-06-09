@@ -211,11 +211,12 @@ async function loadCountryData() {
             // Try multiple API endpoints in order of preference
             const apiEndpoints = [
                 // Primary endpoint - REQUIRED fields for /all endpoint (max 10 fields)
-                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,population,region,subregion,languages,currencies,flags,translations',
-                // Alternative with minimal fields
-                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags',
-                // Independent countries only with fields
-                'https://restcountries.com/v3.1/independent?status=true&fields=name,cca2,capital,region,flags'
+                // Including essential missing fields: area, timezones, idd, car
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,population,region,subregion,currencies,flags,area,timezones',
+                // Alternative with different field combinations to get missing data
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,area,timezones,idd,car,languages,flags,translations',
+                // Minimal fields as last resort
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags'
             ];
             let lastError = null;
             
@@ -369,6 +370,22 @@ function processApiData(apiData) {
     
     console.log(`Processing ${apiData.length} countries from API`);
     
+    // Debug: Check what fields are available in the first country
+    if (apiData.length > 0) {
+        const sampleCountry = apiData[0];
+        console.log('Sample country data structure:', {
+            name: sampleCountry.name?.common,
+            hasArea: !!sampleCountry.area,
+            hasTimezones: !!sampleCountry.timezones,
+            hasIdd: !!sampleCountry.idd,
+            hasCar: !!sampleCountry.car,
+            area: sampleCountry.area,
+            timezones: sampleCountry.timezones,
+            idd: sampleCountry.idd,
+            car: sampleCountry.car
+        });
+    }
+    
     const processedData = {
         countries: {},
         codes: {},
@@ -425,11 +442,12 @@ function processApiData(apiData) {
             languages: country.languages ? Object.values(country.languages).join(', ') : 'N/A',
             currencies: country.currencies ? Object.values(country.currencies)
                 .map(c => `${c.name || 'Unknown'} (${c.symbol || ''})`).join(', ') : 'N/A',
-            // New fields from API (with fallbacks)
+            // Fields that should now be available from API
             area: country.area ? `${country.area.toLocaleString()} km²` : 'N/A',
             timezones: country.timezones ? country.timezones.join(', ') : 'N/A',
             borders: country.borders ? country.borders.join(', ') : 'None',
             drivingSide: country.car?.side || 'N/A',
+            // Handle idd structure for calling codes (v3.1 format)
             callingCodes: (country.idd?.root && country.idd?.suffixes?.[0]) ? 
                 (country.idd.root + country.idd.suffixes[0]) : 'N/A',
             // Holiday information
