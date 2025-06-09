@@ -175,14 +175,10 @@ async function loadCountryData() {
     showLoading(true);
     
     try {
-        // Clear old cache data that may have incorrect structure
+        // Clear cache to test new optimized API endpoints - REMOVE THIS AFTER TESTING
         localStorage.removeItem('countryData');
         localStorage.removeItem('countryDataTimestamp');
-        
-        // Verificar que los datos de días festivos estén cargados
-        if (typeof countryHolidays === 'undefined') {
-            console.error('Error: Datos de festivos no disponibles');
-        }
+        console.log('🖾 Cache cleared for testing new API endpoints');
         
         // Check if we have cached data
         const cachedData = localStorage.getItem('countryData');
@@ -210,10 +206,10 @@ async function loadCountryData() {
             // This is a breaking change implemented in 2025
             // Try multiple API endpoints in order of preference
             const apiEndpoints = [
-                // Primary endpoint - Include ALL essential fields, prioritizing missing data
-                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags,area,timezones,idd,car,languages',
-                // Secondary endpoint with additional valuable data
-                'https://restcountries.com/v3.1/all?fields=name,cca2,population,subregion,currencies,borders,fifa,gini,landlocked,demonyms',
+                // Primary endpoint - OPTIMIZED with most critical fields (exactly 10 fields max)
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,subregion,population,currencies,languages,flags,area',
+                // Secondary endpoint for enhanced features
+                'https://restcountries.com/v3.1/all?fields=name,cca2,timezones,idd,car,borders,fifa,gini,landlocked,demonyms',
                 // Minimal fields as last resort
                 'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags'
             ];
@@ -349,6 +345,44 @@ async function loadCountryData() {
     }
 }
 
+// Merge data from primary and secondary API endpoints
+function mergeApiData(primaryData, secondaryData) {
+    if (!Array.isArray(primaryData) || !Array.isArray(secondaryData)) {
+        console.error('Invalid data for merging');
+        return primaryData || secondaryData || [];
+    }
+    
+    // Create a map of secondary data by country code for quick lookup
+    const secondaryMap = new Map();
+    secondaryData.forEach(country => {
+        if (country.cca2) {
+            secondaryMap.set(country.cca2, country);
+        }
+    });
+    
+    // Merge primary data with secondary data
+    const mergedData = primaryData.map(primaryCountry => {
+        const countryCode = primaryCountry.cca2;
+        const secondaryCountry = secondaryMap.get(countryCode);
+        
+        if (secondaryCountry) {
+            // Merge the two objects, with secondary data supplementing primary
+            return {
+                ...primaryCountry,
+                ...secondaryCountry,
+                // Ensure name and cca2 come from primary (most reliable)
+                name: primaryCountry.name,
+                cca2: primaryCountry.cca2
+            };
+        }
+        
+        return primaryCountry;
+    });
+    
+    console.log(`Merged ${mergedData.length} countries with enhanced data`);
+    return mergedData;
+}
+
 // Process API data to match our format with PULL_ prefix
 function processApiData(apiData) {
     // Safety check for undefined or invalid data
@@ -386,13 +420,19 @@ function processApiData(apiData) {
             languages: sampleCountry.languages
         });
         
-        // Check if we have all the essential missing fields
-        const missingFields = [];
-        if (!sampleCountry.area) missingFields.push('area');
-        if (!sampleCountry.timezones) missingFields.push('timezones');
-        if (!sampleCountry.idd) missingFields.push('idd');
-        if (!sampleCountry.car) missingFields.push('car');
-        if (!sampleCountry.languages) missingFields.push('languages');
+        // Check if we have the most critical fields from our optimized primary endpoint
+        const missingCriticalFields = [];
+        if (!sampleCountry.population) missingCriticalFields.push('population');
+        if (!sampleCountry.subregion) missingCriticalFields.push('subregion');
+        if (!sampleCountry.currencies) missingCriticalFields.push('currencies');
+        
+        // Check secondary priority fields
+        const missingSecondaryFields = [];
+        if (!sampleCountry.area) missingSecondaryFields.push('area');
+        if (!sampleCountry.timezones) missingSecondaryFields.push('timezones');
+        if (!sampleCountry.idd) missingSecondaryFields.push('idd');
+        if (!sampleCountry.car) missingSecondaryFields.push('car');
+        if (!sampleCountry.languages) missingSecondaryFields.push('languages');
         
         // Check additional valuable fields
         const additionalFields = [];
@@ -401,11 +441,23 @@ function processApiData(apiData) {
         if (sampleCountry.hasOwnProperty('landlocked')) additionalFields.push('landlocked');
         if (sampleCountry.demonyms) additionalFields.push('demonyms');
         if (sampleCountry.borders) additionalFields.push('borders');
+        if (sampleCountry.population) additionalFields.push('population');
+        if (sampleCountry.subregion) additionalFields.push('subregion');
+        if (sampleCountry.currencies) additionalFields.push('currencies');
+        if (sampleCountry.timezones) additionalFields.push('timezones');
+        if (sampleCountry.idd) additionalFields.push('idd');
+        if (sampleCountry.car) additionalFields.push('car');
         
-        if (missingFields.length > 0) {
-            console.warn('Still missing essential fields:', missingFields);
+        if (missingCriticalFields.length > 0) {
+            console.error('❌ Missing CRITICAL fields:', missingCriticalFields);
         } else {
-            console.log('✅ All essential fields are available!');
+            console.log('✅ All critical fields are available!');
+        }
+        
+        if (missingSecondaryFields.length > 0) {
+            console.warn('⚠️ Missing secondary fields:', missingSecondaryFields);
+        } else {
+            console.log('✅ All secondary fields are available!');
         }
         
         if (additionalFields.length > 0) {
