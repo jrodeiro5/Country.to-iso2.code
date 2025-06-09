@@ -32,5 +32,12 @@ const esTranslations = {
     businessInfo: 'Información de Negocios',
     workingHours: 'Horario Laboral',
     businessCulture: 'Cultura de Negocios',
-    upcomingHolidays: 'Próximos Festivos'
+    upcomingHolidays: 'Próximos Festivos',
+    
+    // New enhanced fields
+    fifa: 'Código FIFA',
+    gini: 'Índice de Gini',
+    landlocked: 'Sin Salida al Mar',
+    demonym: 'Gentilicio',
+    borders: 'Países Limítrofes'
 };

@@ -211,10 +211,9 @@ async function loadCountryData() {
             // Try multiple API endpoints in order of preference
             const apiEndpoints = [
                 // Primary endpoint - Include ALL essential fields, prioritizing missing data
-                // Removing less critical fields to fit: population, subregion, currencies
                 'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags,area,timezones,idd,car,languages',
-                // Alternative with different priorities if first fails
-                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,population,subregion,currencies,flags,translations,area,timezones',
+                // Secondary endpoint with additional valuable data
+                'https://restcountries.com/v3.1/all?fields=name,cca2,population,subregion,currencies,borders,fifa,gini,landlocked,demonyms',
                 // Minimal fields as last resort
                 'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags'
             ];
@@ -395,10 +394,22 @@ function processApiData(apiData) {
         if (!sampleCountry.car) missingFields.push('car');
         if (!sampleCountry.languages) missingFields.push('languages');
         
+        // Check additional valuable fields
+        const additionalFields = [];
+        if (sampleCountry.fifa) additionalFields.push('fifa');
+        if (sampleCountry.gini) additionalFields.push('gini');
+        if (sampleCountry.hasOwnProperty('landlocked')) additionalFields.push('landlocked');
+        if (sampleCountry.demonyms) additionalFields.push('demonyms');
+        if (sampleCountry.borders) additionalFields.push('borders');
+        
         if (missingFields.length > 0) {
             console.warn('Still missing essential fields:', missingFields);
         } else {
             console.log('✅ All essential fields are available!');
+        }
+        
+        if (additionalFields.length > 0) {
+            console.log(`🎆 Additional fields available: ${additionalFields.join(', ')}`);
         }
     }
     
@@ -467,6 +478,11 @@ function processApiData(apiData) {
             // Handle idd structure for calling codes (v3.1 format)
             callingCodes: (country.idd?.root && country.idd?.suffixes?.[0]) ? 
                 (country.idd.root + country.idd.suffixes[0]) : 'N/A',
+            // Additional valuable fields from secondary endpoint
+            fifa: country.fifa || 'N/A',
+            gini: country.gini?.['2019'] ? `${country.gini['2019']}%` : 'N/A',
+            landlocked: country.landlocked ? 'Sí' : 'No',
+            demonym: country.demonyms?.eng ? country.demonyms.eng.m : 'N/A',
             // Holiday information
             holidays: holidayInfo.holidays,
             workingHours: holidayInfo.workingHours,
