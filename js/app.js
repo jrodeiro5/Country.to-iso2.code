@@ -202,7 +202,7 @@ async function loadCountryData() {
         }
         
         // Fetch from API
-        let apiData;
+        let apiData = null;
         
         try {
             // IMPORTANT: REST Countries API now REQUIRES field filtering for /all endpoint
@@ -217,8 +217,6 @@ async function loadCountryData() {
                 // Independent countries only with fields
                 'https://restcountries.com/v3.1/independent?status=true&fields=name,cca2,capital,region,flags'
             ];
-            
-            let apiData = null;
             let lastError = null;
             
             for (const endpoint of apiEndpoints) {
@@ -233,10 +231,15 @@ async function loadCountryData() {
                     
                     if (response.ok) {
                         const data = await response.json();
+                        console.log(`API Response from ${endpoint}:`, data);
+                        console.log(`Data type:`, typeof data, `Is Array:`, Array.isArray(data), `Length:`, data?.length);
+                        
                         if (Array.isArray(data) && data.length > 0) {
                             apiData = data;
                             console.log(`Successfully fetched data from: ${endpoint}`);
                             break;
+                        } else {
+                            console.warn(`Invalid data structure from ${endpoint}:`, data);
                         }
                     } else {
                         const errorText = await response.text();
@@ -263,6 +266,15 @@ async function loadCountryData() {
             console.error('Error fetching API data:', fetchError);
             throw fetchError; // Re-throw to be caught by the outer try/catch
         }
+        
+        // Add final check before processing
+        console.log('Final apiData check before processing:', {
+            isDefined: apiData !== undefined,
+            isNotNull: apiData !== null,
+            isArray: Array.isArray(apiData),
+            length: apiData?.length,
+            sample: apiData?.[0]
+        });
         
         // Process API data to our format
         countryData = processApiData(apiData);
@@ -339,6 +351,24 @@ async function loadCountryData() {
 
 // Process API data to match our format with PULL_ prefix
 function processApiData(apiData) {
+    // Safety check for undefined or invalid data
+    if (!apiData) {
+        console.error('processApiData: apiData is undefined or null');
+        return { countries: {}, codes: {}, details: {}, spanishNames: {} };
+    }
+    
+    if (!Array.isArray(apiData)) {
+        console.error('processApiData: apiData is not an array:', typeof apiData, apiData);
+        return { countries: {}, codes: {}, details: {}, spanishNames: {} };
+    }
+    
+    if (apiData.length === 0) {
+        console.error('processApiData: apiData array is empty');
+        return { countries: {}, codes: {}, details: {}, spanishNames: {} };
+    }
+    
+    console.log(`Processing ${apiData.length} countries from API`);
+    
     const processedData = {
         countries: {},
         codes: {},
