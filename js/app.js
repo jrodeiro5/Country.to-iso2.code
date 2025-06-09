@@ -1023,6 +1023,13 @@ function showCountryDetails(countryName) {
     }
     document.getElementById('drivingSide').textContent = details.drivingSide || 'N/A';
     
+    // Enhanced fields from API research
+    document.getElementById('fifa').textContent = details.fifa || 'N/A';
+    document.getElementById('gini').textContent = details.gini || 'N/A';
+    document.getElementById('landlocked').textContent = details.landlocked || 'N/A';
+    document.getElementById('demonym').textContent = details.demonym || 'N/A';
+    document.getElementById('borders').textContent = details.borders || 'N/A';
+    
     // Set business information
     const workingHoursEl = document.getElementById('workingHours');
     const businessCultureEl = document.getElementById('businessCulture');
