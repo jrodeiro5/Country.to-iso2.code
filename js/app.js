@@ -205,15 +205,57 @@ async function loadCountryData() {
         let apiData;
         
         try {
-            const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,capital,population,region,subregion,languages,currencies,flags,translations,area,timezones,borders,car,idd');
+            // IMPORTANT: REST Countries API now REQUIRES field filtering for /all endpoint
+            // Maximum 10 fields allowed. Without fields parameter, returns 400 Bad Request
+            // This is a breaking change implemented in 2025
+            // Try multiple API endpoints in order of preference
+            const apiEndpoints = [
+                // Primary endpoint - REQUIRED fields for /all endpoint (max 10 fields)
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,population,region,subregion,languages,currencies,flags,translations',
+                // Alternative with minimal fields
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags',
+                // Independent countries only with fields
+                'https://restcountries.com/v3.1/independent?status=true&fields=name,cca2,capital,region,flags'
+            ];
             
-            if (!response.ok) {
-                throw new Error(`Failed to fetch country data: ${response.status} ${response.statusText}`);
+            let apiData = null;
+            let lastError = null;
+            
+            for (const endpoint of apiEndpoints) {
+                try {
+                    console.log(`Trying API endpoint: ${endpoint}`);
+                    const response = await fetch(endpoint, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            apiData = data;
+                            console.log(`Successfully fetched data from: ${endpoint}`);
+                            break;
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        console.warn(`Endpoint ${endpoint} returned: ${response.status} ${response.statusText}`);
+                        console.warn(`Error details:`, errorText);
+                        lastError = new Error(`Failed to fetch from ${endpoint}: ${response.status} ${response.statusText}`);
+                    }
+                } catch (endpointError) {
+                    console.warn(`Error with endpoint ${endpoint}:`, endpointError);
+                    lastError = endpointError;
+                    continue;
+                }
             }
             
-            apiData = await response.json();
-            // Datos recibidos correctamente
+            if (!apiData) {
+                throw lastError || new Error('All API endpoints failed');
+            }
             
+            // Datos recibidos correctamente
             if (!Array.isArray(apiData) || apiData.length === 0) {
                 throw new Error('API returned empty or invalid data structure');
             }
@@ -237,26 +279,59 @@ async function loadCountryData() {
         // Make sure we definitely have data - create minimal structure if needed
         if (!countryData || !countryData.details || Object.keys(countryData.details).length === 0) {
             console.error('Fallback data failed too. Creating minimal structure');
-            countryData = {
-                countries: { 'spain': 'PULL_ES' },
-                codes: { 'pull_es': 'spain' },
-                details: {
-                    'spain': {
-                        name: 'Spain',
-                        spanishName: 'España',
-                        code: 'PULL_ES',
-                        isoCode: 'ES',
-                        capital: 'Madrid',
-                        population: 47351567,
-                        region: 'Europe',
-                        subregion: 'Southern Europe',
-                    }
-                },
-                spanishNames: { 'españa': 'spain' }
-            };
+            console.log('Using built-in country codes as final fallback');
+            
+            // Use the built-in countryCodes from the HTML as absolute fallback
+            countryData = loadFallbackData();
+            
+            // If even that fails, create a very minimal structure
+            if (!countryData || Object.keys(countryData.countries || {}).length === 0) {
+                countryData = {
+                    countries: { 'spain': 'PULL_ES', 'france': 'PULL_FR', 'germany': 'PULL_DE' },
+                    codes: { 'pull_es': 'spain', 'pull_fr': 'france', 'pull_de': 'germany' },
+                    details: {
+                        'spain': {
+                            name: 'Spain',
+                            spanishName: 'España',
+                            code: 'PULL_ES',
+                            isoCode: 'ES',
+                            capital: 'Madrid',
+                            population: 47351567,
+                            region: 'Europe',
+                            subregion: 'Southern Europe'
+                        },
+                        'france': {
+                            name: 'France',
+                            spanishName: 'Francia',
+                            code: 'PULL_FR',
+                            isoCode: 'FR',
+                            capital: 'Paris',
+                            population: 67000000,
+                            region: 'Europe',
+                            subregion: 'Western Europe'
+                        },
+                        'germany': {
+                            name: 'Germany',
+                            spanishName: 'Alemania',
+                            code: 'PULL_DE',
+                            isoCode: 'DE',
+                            capital: 'Berlin',
+                            population: 83000000,
+                            region: 'Europe',
+                            subregion: 'Western Europe'
+                        }
+                    },
+                    spanishNames: { 'españa': 'spain', 'francia': 'france', 'alemania': 'germany' }
+                };
+            }
         }
         
-        showError(true);
+        // Only show error if we really have no data at all
+        if (!countryData || Object.keys(countryData.countries || {}).length === 0) {
+            showError(true);
+        } else {
+            console.log(`Loaded fallback data with ${Object.keys(countryData.countries).length} countries`);
+        }
     } finally {
         showLoading(false);
     }
@@ -306,26 +381,27 @@ function processApiData(apiData) {
             };
         }
         
-        // Store additional details
+        // Store additional details with safe field access
         processedData.details[name] = {
-            name: country.name.common,
-            spanishName: country.translations?.spa?.common || country.name.common,
+            name: country.name?.common || country.name || 'Unknown',
+            spanishName: country.translations?.spa?.common || country.name?.common || country.name || 'Unknown',
             code: pullCode,
             isoCode: code,
-            flag: country.flags?.svg || '',
-            capital: country.capital?.[0] || '',
+            flag: country.flags?.svg || country.flags?.png || '',
+            capital: Array.isArray(country.capital) ? country.capital[0] : (country.capital || ''),
             population: country.population || 0,
             region: country.region || '',
             subregion: country.subregion || '',
-            languages: Object.values(country.languages || {}).join(', '),
-            currencies: Object.values(country.currencies || {})
-                .map(c => `${c.name} (${c.symbol || ''})`).join(', '),
-            // New fields from API
+            languages: country.languages ? Object.values(country.languages).join(', ') : 'N/A',
+            currencies: country.currencies ? Object.values(country.currencies)
+                .map(c => `${c.name || 'Unknown'} (${c.symbol || ''})`).join(', ') : 'N/A',
+            // New fields from API (with fallbacks)
             area: country.area ? `${country.area.toLocaleString()} km²` : 'N/A',
-            timezones: country.timezones?.join(', ') || 'N/A',
-            borders: country.borders?.join(', ') || 'None',
+            timezones: country.timezones ? country.timezones.join(', ') : 'N/A',
+            borders: country.borders ? country.borders.join(', ') : 'None',
             drivingSide: country.car?.side || 'N/A',
-            callingCodes: country.idd?.root + country.idd?.suffixes?.[0] || 'N/A',
+            callingCodes: (country.idd?.root && country.idd?.suffixes?.[0]) ? 
+                (country.idd.root + country.idd.suffixes[0]) : 'N/A',
             // Holiday information
             holidays: holidayInfo.holidays,
             workingHours: holidayInfo.workingHours,
