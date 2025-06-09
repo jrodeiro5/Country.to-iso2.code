@@ -210,11 +210,11 @@ async function loadCountryData() {
             // This is a breaking change implemented in 2025
             // Try multiple API endpoints in order of preference
             const apiEndpoints = [
-                // Primary endpoint - REQUIRED fields for /all endpoint (max 10 fields)
-                // Including essential missing fields: area, timezones, idd, car
-                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,population,region,subregion,currencies,flags,area,timezones',
-                // Alternative with different field combinations to get missing data
-                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,area,timezones,idd,car,languages,flags,translations',
+                // Primary endpoint - Include ALL essential fields, prioritizing missing data
+                // Removing less critical fields to fit: population, subregion, currencies
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags,area,timezones,idd,car,languages',
+                // Alternative with different priorities if first fails
+                'https://restcountries.com/v3.1/all?fields=name,cca2,capital,population,subregion,currencies,flags,translations,area,timezones',
                 // Minimal fields as last resort
                 'https://restcountries.com/v3.1/all?fields=name,cca2,capital,region,flags'
             ];
@@ -379,11 +379,27 @@ function processApiData(apiData) {
             hasTimezones: !!sampleCountry.timezones,
             hasIdd: !!sampleCountry.idd,
             hasCar: !!sampleCountry.car,
+            hasLanguages: !!sampleCountry.languages,
             area: sampleCountry.area,
             timezones: sampleCountry.timezones,
             idd: sampleCountry.idd,
-            car: sampleCountry.car
+            car: sampleCountry.car,
+            languages: sampleCountry.languages
         });
+        
+        // Check if we have all the essential missing fields
+        const missingFields = [];
+        if (!sampleCountry.area) missingFields.push('area');
+        if (!sampleCountry.timezones) missingFields.push('timezones');
+        if (!sampleCountry.idd) missingFields.push('idd');
+        if (!sampleCountry.car) missingFields.push('car');
+        if (!sampleCountry.languages) missingFields.push('languages');
+        
+        if (missingFields.length > 0) {
+            console.warn('Still missing essential fields:', missingFields);
+        } else {
+            console.log('✅ All essential fields are available!');
+        }
     }
     
     const processedData = {
@@ -436,13 +452,14 @@ function processApiData(apiData) {
             isoCode: code,
             flag: country.flags?.svg || country.flags?.png || '',
             capital: Array.isArray(country.capital) ? country.capital[0] : (country.capital || ''),
+            // Handle fields that might be in different endpoints
             population: country.population || 0,
             region: country.region || '',
             subregion: country.subregion || '',
             languages: country.languages ? Object.values(country.languages).join(', ') : 'N/A',
             currencies: country.currencies ? Object.values(country.currencies)
                 .map(c => `${c.name || 'Unknown'} (${c.symbol || ''})`).join(', ') : 'N/A',
-            // Fields that should now be available from API
+            // Priority fields that should now be available from primary endpoint
             area: country.area ? `${country.area.toLocaleString()} km²` : 'N/A',
             timezones: country.timezones ? country.timezones.join(', ') : 'N/A',
             borders: country.borders ? country.borders.join(', ') : 'None',
